@@ -39,7 +39,15 @@ function update_script() {
       /opt/ampache/public/play/.htaccess \
       /opt/ampache/advanced-config
 
-    fetch_and_deploy_gh_release "Ampache" "ampache/ampache" "prebuild" "latest" "/opt/ampache" "ampache-*_all_php8.4.zip"
+    CURRENT_PHP=$(php -v 2>/dev/null | awk '/^PHP/{print $2}' | cut -d. -f1,2)
+    if [[ "$CURRENT_PHP" != "8.5" ]]; then
+      msg_info "Migrating PHP $CURRENT_PHP to 8.5"
+      $STD apt remove -y php"${CURRENT_PHP//./}"*
+      PHP_VERSION="8.5" PHP_APACHE="YES" setup_php
+      msg_ok "Migrated PHP $CURRENT_PHP to 8.5"
+    fi
+
+    fetch_and_deploy_gh_release "Ampache" "ampache/ampache" "prebuild" "latest" "/opt/ampache" "ampache-*_all_php8.5.zip"
 
     restore_backup
     chmod 664 /opt/ampache/public/rest/.htaccess /opt/ampache/public/play/.htaccess
